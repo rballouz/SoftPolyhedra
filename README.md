@@ -2,7 +2,6 @@ Soft Polyhedra
 =============
 
 Ronald Ballouz is a PhD student in the Astronomy Department at the University of Maryland, College Park.
-
 I'm working on code to simulate the ``soft''-collisions of polyhedra (spring force arising from overlap).
 
 Using the following sources as guidance:
