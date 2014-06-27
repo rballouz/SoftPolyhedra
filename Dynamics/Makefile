@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 CC=gcc
-CCFLAGS=-g -I/home/rballouz/Polyhedra
+CCFLAGS=-g -I/home/rballouz/SoftPolyhedra/Dynamics
 #OMP=-assume nocc-omp -openmp -openmp_report1
 
 PROGS = 
