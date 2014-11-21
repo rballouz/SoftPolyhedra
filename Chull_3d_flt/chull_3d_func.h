@@ -16,6 +16,7 @@ void CleanEdges( void );
 void CleanFaces( void );
 void ReadVertices(void);
 void PrintEdges(void);
+void PrintFaces(void);
 
 /*Functions*/
 tVertex	MakeNullVertex( void )
@@ -547,5 +548,27 @@ void PrintEdges(void)
         printf("%.2f  %.2f  %.2f  %.2f  %.2f  %.2f\n",x0,y0,z0,x1,y1,z1);
         e=e->next;
     } while(e != edges);
+}
+
+void PrintFaces(void)
+{
+    float     x0, y0, z0, x1, y1, z1, x2, y2, z2;
+    tFace   f;
+    
+    f = faces;
+    do{
+        x0=f->vertex[0]->v[X];
+        y0=f->vertex[0]->v[Y];
+        z0=f->vertex[0]->v[Z];
+        x1=f->vertex[1]->v[X];
+        y1=f->vertex[1]->v[Y];
+        z1=f->vertex[1]->v[Z];
+        x2=f->vertex[2]->v[X];
+        y2=f->vertex[2]->v[Y];
+        z2=f->vertex[2]->v[Z];
+        
+        printf("%.2f  %.2f  %.2f  %.2f  %.2f  %.2f  %.2f  %.2f  %.2f\n",x0,y0,z0,x1,y1,z1,x2,y2,z2);
+        f=f->next;
+    } while(f != faces);
 }
     

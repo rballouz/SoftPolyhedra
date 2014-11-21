@@ -1,8 +1,10 @@
-import numpy as np
-
 #Picking Random Points on a Sphere
 #Method from NRiC, Section 21.5.1
 #Originally by Marsaglia (1972),
+
+import numpy as np
+import sys
+
 def square(x):
     return x*x
 def mag(x,y,z):
@@ -10,8 +12,13 @@ def mag(x,y,z):
 
 i=0
 
-N=5
-Rad=4
+
+if (len(sys.argv) != 2):
+    print "Usage: python random_sphere.py number_vertices"
+    exit()
+
+N=int(sys.argv[1])
+Rad=1
 
 
 while i < N:

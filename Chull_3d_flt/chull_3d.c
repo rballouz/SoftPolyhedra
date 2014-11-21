@@ -10,7 +10,7 @@ int main()
     ReadVertices();
     DoubleTriangle();
     ConstructHull();
-    PrintEdges();
+    PrintFaces();
     
     /*
     tVertex v;
