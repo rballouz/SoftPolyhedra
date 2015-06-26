@@ -3,69 +3,83 @@
 #include<assert.h>
 #include<math.h>
 #include"linear_algebra.h"
+#include"particle.h"
 #include"mylib.h"
-
-typedef struct {
-  double mass;
-  double rad;
-  double k;
-  double dOverlap;
-  Vec vNhat; //unit vector of relative velocity between particle and neighbor
-  Vec vOrient;
-  Mat mInertia;
-  Vec r;
-  Vec v;
-  Vec a;
-} PARTICLE;
-
-double OverlapTest(PARTICLE *p, PARTICLE *pn);
-double OverlapTest(PARTICLE *p, PARTICLE *pn){
-    Vec vRelDist, vRelVel; //relative distance and velocity between two particles
-    vecSub(p->r,pn->r,vRelDist);//Find relative Distance and Velocity
-    vecSub(p->v,pn->v,vRelVel);
-    vecScale(vRelDist,1/vecMag(vRelDist),p->vNhat);
-    vecScale(p->vNhat,-1,pn->vNhat);
-    p->dOverlap=vecMag(vRelDist)-(p->rad+pn->rad);//check overlap distance
-    pn->dOverlap=p->dOverlap;
-}
+#include"smoothfcn_eq.h"
 
 int main(){
 
-  //PARTICLE pd,pnd;
   PARTICLE *p,*pn;
   p=malloc(sizeof(PARTICLE)); //need to allocate memory to pointer
   pn=malloc(sizeof(PARTICLE));
+  FILE *fp;
 
+	double dDelta,t,tmax;
+  double CnPreFac, CtPreFac, dLnEpsN, dLnEpsT, dLnEpsNsq, dLnEpsTsq, a;;
+  int i;
+  int nSteps,iStep=0;
+  int iOutFreq;
+  int bOverlap=0;
+  char achOutFile[20];
 
-	double dDelta,t,tmax, theta, phi;
-  int i,j=10;
-  Vec vRelDist, vRelVel, vNhat, vnNhat; //relative distance and velocity between two particles
-  dDelta=0.01;
-  t=0;
-  tmax=15;
- 
-  vecZero(p->r);
-  vecSet(p->v,0.5,0.,0);
-  vecZero(p->a);
-  p->mass=1.;
-  p->rad=0.5;
-
-  vecSet(pn->r,5.,-5,0.);
-  vecSet(pn->v,0,0.5,0);
-  vecZero(pn->a);
-  pn->mass=1.;
-  pn->rad=0.5;
-  vecZero(vRelDist);
-  vecZero(vRelVel);
-
-  while (t<tmax){
-    //print to stdout
-    if (j==10){
-		  printf("%f  %f  %f  %f  %f  %f  %f\n",t,p->r[0],pn->r[0],p->r[1],pn->r[1],p->r[2],pn->r[2]);
-      j=0;
-    }
-      j++;
+  //Need to initialize dKn for each particle
+  p->dKn = 1.06e-15;
+  p->dKt = 2.*p->dKn/7.;
+  p->dEpsN = 0.8;
+  p->dEpsT = 0.8;
+  p->dMuS = 0.4;
   
+  pn->dKn = p->dKn;
+  pn->dKt = p->dKt;
+  pn->dEpsN = p->dEpsN;
+  pn->dEpsT = p->dEpsT;
+  pn->dMuS = p->dMuS;
+  
+  dDelta=1.47e-10;
+  nSteps = 40000;
+  iOutFreq = nSteps / 50;
+  t=0;
+  tmax=dDelta * nSteps;
+ 
+ 
+  const double pi_sq = M_PI*M_PI;
+  static int bCnCtPreFacCalculated = 0; /* since dEpsN and dEpsT are identical for all particles in sim */
+
+  if (!bCnCtPreFacCalculated) {
+    /* damping term: normal */
+    dLnEpsN = log(p->dEpsN);
+    dLnEpsNsq = dLnEpsN*dLnEpsN;
+    a = pi_sq + dLnEpsNsq;
+    CnPreFac = -sign(dLnEpsN)*sqrt(dLnEpsNsq*p->dKn/a);
+    CnPreFac += CnPreFac;
+
+    /* damping term: tangential */
+    dLnEpsT = log(p->dEpsT);
+    dLnEpsTsq = dLnEpsT*dLnEpsT;
+    a = pi_sq + dLnEpsTsq;
+    CtPreFac = -sign(dLnEpsT)*sqrt(dLnEpsTsq*p->dKt/a);
+    CtPreFac += CtPreFac;
+    bCnCtPreFacCalculated = 1;
+    }
+
+  /*Take input from FILE here - Initialization*/
+  FileInput(p, pn);
+
+  
+  /*Simulation loop here*/
+  while (t<tmax){
+  
+    /* Output to file Here*/
+    if ((t == 0) || (iStep % iOutFreq == 0)){
+      /*Define File Name based on time step*/
+      sprintf(achOutFile,"ss.%09d.bt",iStep);
+      /*Output function*/
+		  FileOutput(p, pn, achOutFile);
+    }
+    /* Output-Function Ends Here*/
+    
+
+    /* LeapFrog */
     for (i=0;i<3;i++){
       p->v[i]=p->v[i]+(0.5*dDelta*p->a[i]); //kick
       pn->v[i]=pn->v[i]+(0.5*dDelta*pn->a[i]);
@@ -75,23 +89,34 @@ int main(){
   	  p->r[i]=p->r[i]+(dDelta*p->v[i]); //drift
   	  pn->r[i]=pn->r[i]+(dDelta*pn->v[i]); //
     }
+
     //Overlap Test
-    OverlapTest(p,pn);
-    springforce(p->mass,p->dOverlap, p->vNhat, p->a);
-    springforce(pn->mass,pn->dOverlap, pn->vNhat, pn->a);
+        bOverlap = bOverlapTest(p,pn);
+    if (bOverlap){
+      DoDEM(p, pn, dDelta, CnPreFac, CtPreFac);
+      printf("%d\n",bOverlap);
+    }
+    else{
+      vecZero(p->a); //Is this correct?
+      vecZero(pn->a);
+    }
     
     for (i=0;i<3;i++){
       p->v[i]=p->v[i]+(0.5*dDelta*p->a[i]); //kick
       pn->v[i]=pn->v[i]+(0.5*dDelta*pn->a[i]);
     }
-    t+=dDelta;
-  }
+    /* LeapFrog ENDS*/
 
+
+    t+=dDelta;
+    iStep++;
+  }
+  
   return 0;
 }
 
 //K: loop over i (particles) and k (components)
 //D: loop over i (particles) and k (components)
-///--->comput acceleration
+///--->compute acceleration
 //K: loop over i (particles) and k (components)
 
