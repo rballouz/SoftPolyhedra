@@ -83,14 +83,11 @@ int main(){
   ConstructHull(p);
   PrintFaces(p);
   PrintVertices(p);
+  //p->w[2]=0.5;
+  //dDelta=0.5;
+  //RotatePoly(p, dDelta);
   
-  p->w[2]=0.5;
-  dDelta=0.5;
-  RotatePoly(p, dDelta);
   
-  PrintVertices(p);
-  PrintFaces(p);
-
   return 0;
 }
 

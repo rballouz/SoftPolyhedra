@@ -5,6 +5,97 @@ void matPrint(Mat a); //print out a 3x3 matrix
 void FileInput(PARTICLE *p, PARTICLE *pn);
 void FileOutput(PARTICLE *p, PARTICLE *pn, char *achOutFile);
 
+#define PolyMOIsubexp(w0, w1, w2, f1, f2, f3, g0, g1, g2)\
+{\
+  double temp0, temp1, temp2;\
+  temp0=w0+w1;\
+  f1=temp0+w2;\
+  temp1=w0*w0;\
+  temp2=temp1+w1*temp0;\
+  f2=temp2+w2*f1;\
+  f3=w0*temp1+w1*temp2+w2*f2;\
+  g0=f2+w0*(f1+w0);\
+  g1=f2+w1*(f1+w1);\
+  g2=f2+w2*(f1+w2);\
+  }
+
+void PolyMOIcompute(PARTICLE *p)
+{
+  double one,x,y,z,x_2,y_2,z_2,xy,yz,zx;
+  one=0;x=0;y=0;z=0;x_2=0;y_2=0;z_2=0;xy=0;yz=0;zx=0;
+  double x0, y0, z0, x1, y1, z1, x2, y2, z2;
+  double a1, a2, b1, b2, c1, c2, d0 ,d1, d2;
+  double f1x, f2x, f3x, g0x, g1x, g2x;
+  double f1y, f2y, f3y, g0y, g1y, g2y;
+  double f1z, f2z, f3z, g0z, g1z, g2z;
+  double dDensity = p->dDensity;
+  double dMass;
+  /*loop through faces*/
+  tFace f;
+  f=p->faces;
+  do{
+  
+    x0=f->vertex[0]->v[X];
+    y0=f->vertex[0]->v[Y];
+    z0=f->vertex[0]->v[Z];
+    x1=f->vertex[1]->v[X];
+    y1=f->vertex[1]->v[Y];
+    z1=f->vertex[1]->v[Z];
+    x2=f->vertex[2]->v[X];
+    y2=f->vertex[2]->v[Y];
+    z2=f->vertex[2]->v[Z];
+  
+    a1=x1-x0;
+    a2=x2-x0;
+    b1=y1-y0;
+    b2=y2-y0;
+    c1=z1-z0;
+    c2=z2-z0;
+    d0=(b1*c2)-(b2*c1);
+    d1=(a2*c1)-(a1*c2);
+    d2=(a1*b2)-(a2*b1);
+    
+    //Compute Integral Terms
+    PolyMOIsubexp(x0, x1, x2, f1x, f2x, f3x, g0x, g1x, g2x);
+    PolyMOIsubexp(y0, x1, x2, f1y, f2y, f3y, g0y, g1y, g2y);
+    PolyMOIsubexp(z0, z1, z2, f1z, f2z, f3z, g0z, g1z, g2z);
+    
+    //Update Integrals
+    one += d0*f1x;
+    x   += d0*f2x;
+    y   += d1*f2y;
+    z   += d2*f2z;
+    x_2  += d0*f3x;
+    y_2  += d1*f3y;
+    z_2  += d2*f3z;
+    xy  += d0*(y0*g0x+y1*g1x+y2*g2x);
+    yz  += d1*(z0*g0y+z1*g1y+z2*g2y);
+    zx  += d2*(x0*g0z+x1*g1z+yz*g2z);
+    f=f->next;
+    } while (f != p->faces);
+    
+    //Multiply by coefficients
+    one*=1./6.;x*=1./24.;y*=1./24.;z*=1./24.;x_2*=1./60.;y_2*=1./60.;z_2*=1./60.;xy*=1./120.;yz*=1./120.;zx*=1./120.;
+  
+    //Define Mass
+    p->dMass = one*dDensity;
+  
+    //Center of Mass
+    p->r[0]=x/dMass;
+    p->r[1]=y/dMass;
+    p->r[2]=z/dMass;
+  
+    //Inertia Tensor relative to center of Mass
+    p->mInertia[0][0]=y_2+z_2-p->dMass*(p->r[1]*p->r[1]+p->r[2]*p->r[2]);
+    p->mInertia[1][1]=x_2+z_2-p->dMass*(p->r[2]*p->r[2]+p->r[0]*p->r[0]);
+    p->mInertia[2][2]=x_2+y_2-p->dMass*(p->r[0]*p->r[0]+p->r[1]*p->r[1]);
+    p->mInertia[0][1]=-(xy-p->dMass*p->r[0]*p->r[1]);
+    p->mInertia[1][0]=p->mInertia[0][1];
+    p->mInertia[1][2]=-(yz-p->dMass*p->r[1]*p->r[2]);
+    p->mInertia[2][1]=p->mInertia[1][2];
+    p->mInertia[0][2]=-(zx-p->dMass*p->r[2]*p->r[0]);
+    p->mInertia[2][0]=p->mInertia[0][2];
+  }
 
 /*Print vertex pairs of edges*/
 void RotatePoly(PARTICLE *p, double dDelta)

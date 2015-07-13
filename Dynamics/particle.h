@@ -17,6 +17,9 @@ typedef struct particle{
   Vec vnOld;
   Vec vShear;
   
+  //IFDEF POLY
+  double dDensity; //Need to define density? or can we get this from the sphere equivalent
+  Mat mInertia;
   tVertex vertices;
   tEdge edges;
   tFace faces;
