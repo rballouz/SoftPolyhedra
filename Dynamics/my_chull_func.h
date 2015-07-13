@@ -9,15 +9,16 @@ void ConstructHull(PARTICLE *p);
 bool AddOne(tVertex pnt, PARTICLE *p);
 int VolumeSign( tFace f, tVertex pnt);
 double Volume( tFace f, tVertex pnt );
-tFace MakeConeFace( tEdge e, tVertex pnt, , PARTICLE *p);
+tFace MakeConeFace( tEdge e, tVertex pnt, PARTICLE *p);
 void MakeCcw( tFace f, tEdge e, tVertex pnt);
-void CleanUp( tVertex *pvnext );
+void CleanUp( tVertex *pvnext, PARTICLE *p );
 void CleanVertices( tVertex *pvnext, PARTICLE *p  );
 void CleanEdges( PARTICLE *p  );
 void CleanFaces( PARTICLE *p );
 void ReadVertices(PARTICLE *p);
 void PrintEdges(PARTICLE *p);
 void PrintFaces(PARTICLE *p);
+void PrintVertices(PARTICLE *p);
 
 /*Functions*/
 tVertex	MakeNullVertex( PARTICLE *p )
@@ -46,7 +47,7 @@ void    DoubleTriangle( PARTICLE *p )
    tVertex  v0, v1, v2, v3, t;
    tFace    f0, f1 = NULL;
    tEdge    e0, e1, e2, s;
-   float      vol;
+   double    vol;
 	
    /* Find 3 noncollinear points. */
    v0 = p->vertices;
@@ -62,8 +63,8 @@ void    DoubleTriangle( PARTICLE *p )
    v2->mark = PROCESSED;
    
    /* Create the two "twin" faces. */
-   f0 = MakeFace( v0, v1, v2, f1 );
-   f1 = MakeFace( v2, v1, v0, f0 );
+   f0 = MakeFace( v0, v1, v2, f1, p );
+   f1 = MakeFace( v2, v1, v0, f0, p );
 
    /* Link adjacent face fields. */
    f0->edge[0]->adjface[1] = f1;
@@ -96,7 +97,7 @@ vertices are those in the list marked as onhull.
 void	ConstructHull( PARTICLE *p )
 {
    tVertex  v, vnext;
-   float 	    vol;
+   double 	  vol;
    bool	    changed;	/* T if addition changes hull; not used. */
 
    v = p->vertices;
@@ -104,8 +105,8 @@ void	ConstructHull( PARTICLE *p )
       vnext = v->next;
       if ( !v->mark ) {
          v->mark = PROCESSED;
-        changed = AddOne( v );
-        CleanUp( &vnext ); /* Pass down vnext in case it gets deleted. */
+        changed = AddOne( v, p );
+        CleanUp( &vnext, p ); /* Pass down vnext in case it gets deleted. */
         }
       v = vnext;
    } while ( v != p->vertices );
@@ -121,7 +122,7 @@ bool 	AddOne( tVertex pnt, PARTICLE *p )
 {
    tFace  f; 
    tEdge  e, temp;
-   float 	  vol;
+   double vol;
    bool	  vis = FALSE;
 
    /* Mark faces visible from p. */
@@ -151,7 +152,7 @@ bool 	AddOne( tVertex pnt, PARTICLE *p )
         e->delete = REMOVED;
       else if ( e->adjface[0]->visible || e->adjface[1]->visible ) 
         /* e border: make a new face. */
-        e->newface = MakeConeFace( e, pnt );
+        e->newface = MakeConeFace( e, pnt, p );
       e = temp;
    } while ( e != p->edges );
    return TRUE;
@@ -186,12 +187,12 @@ int  VolumeSign( tFace f, tVertex pnt)
 
    /* The volume sign should be an integer.*/
    /* DEBUG: should probably use some epsilon instead of 0.5*/
-   if      ( vol >  0.5 )  return  1;
-   else if ( vol < -0.5 )  return -1;
+   if      ( vol >  0.0 )  return  1;
+   else if ( vol <  0.0 )  return -1;
    else                    return  0;
 }
 /*---------------------------------------------------------------------
-Same computation, but computes using floats, and returns the actual volume.
+Same computation, but computes using doubles, and returns the actual volume.
 DEBUG: Double check that this really is the volume of a polyhedron defined 
 by face and non-collinear vertex
 ---------------------------------------------------------------------*/
@@ -523,14 +524,15 @@ void ReadVertices(PARTICLE *p)
     }
 
     tVertex     v;
-    float         x, y, z;
+    double       x, y, z;
     int         vnum=0;
     
-    while (fscanf(fp,"%f %f %f",&x, &y,&z) != EOF) {
+    while (fscanf(fp,"%lf %lf %lf",&x, &y,&z) != EOF) {
         v = MakeNullVertex(p);
         v->v[X] = x;
         v->v[Y] = y;
         v->v[Z] = z;
+        vecScale(v->v,p->dRadius,v->v); /*Scale by Particle Radius*/
         v->vnum = vnum++;
     }
 }
@@ -538,7 +540,7 @@ void ReadVertices(PARTICLE *p)
 /*Print vertex pairs of edges*/
 void PrintEdges(PARTICLE *p)
 {
-  float x0, y0, z0, x1, y1, z1;
+  double x0, y0, z0, x1, y1, z1;
   tEdge e;
 
   e = p->edges;
@@ -549,14 +551,14 @@ void PrintEdges(PARTICLE *p)
     x1=e->endpts[1]->v[X];
     y1=e->endpts[1]->v[Y];
     z1=e->endpts[1]->v[Z];
-    printf("%.2f  %.2f  %.2f  %.2f  %.2f  %.2f\n",x0,y0,z0,x1,y1,z1);
+    printf("%.2g  %.2g  %.2g  %.2g  %.2g  %.2g\n",x0,y0,z0,x1,y1,z1);
     e=e->next;
     } while(e != p->edges);
 }
 
-void PrintFaces(void)
+void PrintFaces(PARTICLE *p)
 {
-  float x0, y0, z0, x1, y1, z1, x2, y2, z2;
+  double x0, y0, z0, x1, y1, z1, x2, y2, z2;
   tFace f;
 
   f = p->faces;
@@ -571,8 +573,25 @@ void PrintFaces(void)
     y2=f->vertex[2]->v[Y];
     z2=f->vertex[2]->v[Z];
 
-    printf("%.2f  %.2f  %.2f  %.2f  %.2f  %.2f  %.2f  %.2f  %.2f\n",x0,y0,z0,x1,y1,z1,x2,y2,z2);
+    printf("%.2g  %.2g  %.2g  %.2g  %.2g  %.2g  %.2g  %.2g  %.2g\n",x0,y0,z0,x1,y1,z1,x2,y2,z2);
     f=f->next;
     } while(f != p->faces);
+    printf("------\n");
 }
 
+void PrintVertices(PARTICLE *p)
+{
+  double x0, y0, z0;
+  tVertex v;
+
+  v = p->vertices;
+  do{
+    x0=v->v[X];
+    y0=v->v[Y];
+    z0=v->v[Z];
+    
+    printf("%.2g  %.2g  %.2g\n",x0,y0,z0);
+    v=v->next;
+    } while(v != p->vertices);
+    printf("------\n");
+}

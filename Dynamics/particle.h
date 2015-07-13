@@ -16,6 +16,10 @@ typedef struct particle{
   Vec a;
   Vec vnOld;
   Vec vShear;
+  
+  tVertex vertices;
+  tEdge edges;
+  tFace faces;
 } PARTICLE;
 
 

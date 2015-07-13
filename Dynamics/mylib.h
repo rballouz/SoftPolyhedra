@@ -1,8 +1,38 @@
+void RotatePoly(PARTICLE *p, double dDelta);
 void SpringForce (PARTICLE *p, PARTICLE *pn);
 int bOverlapTest(PARTICLE *p, PARTICLE *pn);
 void matPrint(Mat a); //print out a 3x3 matrix
 void FileInput(PARTICLE *p, PARTICLE *pn);
 void FileOutput(PARTICLE *p, PARTICLE *pn, char *achOutFile);
+
+
+/*Print vertex pairs of edges*/
+void RotatePoly(PARTICLE *p, double dDelta)
+{
+  Vec xAxis, yAxis, zAxis;
+  xAxis[0]=1;
+  xAxis[1]=0;
+  xAxis[2]=0;
+  
+  yAxis[0]=0;
+  yAxis[1]=1;
+  yAxis[2]=0;
+  
+  zAxis[0]=0;
+  zAxis[1]=0;
+  zAxis[2]=1;
+  
+  tVertex  v;
+  v = p->vertices;
+  do{
+    /*Rotation Transformation Goes Here*/
+    vecRotate(v->v, xAxis, p->w[0]*dDelta);
+    vecRotate(v->v, yAxis, p->w[1]*dDelta);
+    vecRotate(v->v, zAxis, p->w[2]*dDelta);
+    
+    v=v->next;
+    } while(v != p->vertices);
+}
 
 /*Spring Force*/
 void SpringForce (PARTICLE *p, PARTICLE *pn){

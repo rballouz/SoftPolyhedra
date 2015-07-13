@@ -11,10 +11,12 @@ all: $(PROGS) MAIN
    
 MAIN: simple.c
 	$(CC) $(CCFLAGS) -o simple simple.c -lm
-#	$(CC) $(CCFLAGS) $(OBJS) -o simple -lm
+
+poly: simple_poly.c
+	$(CC) $(CCFLAGS) -o simple_poly simple_poly.c -lm
 
 #Utility Targets
 .PHONY: all clean 
 
 clean:
-	rm -rf *.o *.temp simple
+	rm -rf *.o *.temp simple simply_poly

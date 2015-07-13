@@ -2,11 +2,11 @@
 #include<stdlib.h>
 #include<assert.h>
 #include<math.h>
-#include"macros.h"
-#include"chull_3d_defs.h"
-#include"chull_3d_func.h"
-#include"particle.h"
 #include"linear_algebra.h"
+#include"macros.h"
+#include"my_chull.h"
+#include"particle.h"
+#include"my_chull_func.h"
 #include"mylib.h"
 #include"smoothfcn_eq.h"
 
@@ -82,54 +82,15 @@ int main(){
   DoubleTriangle(p);
   ConstructHull(p);
   PrintFaces(p);
-  /*These should take in the particle structure and employ the c.g. algo's on that particle vertex, edge, and face structure -- need to generalize algo's*/
+  PrintVertices(p);
   
-  /*Simulation loop here*/
-  while (t<tmax){
+  p->w[2]=0.5;
+  dDelta=0.5;
+  RotatePoly(p, dDelta);
   
-    /* Output to file Here*/
-    if ((t == 0) || (iStep % iOutFreq == 0)){
-      /*Define File Name based on time step*/
-      sprintf(achOutFile,"ss.%09d.bt",iStep);
-      /*Output function*/
-		  FileOutput(p, pn, achOutFile);
-    }
-    /* Output-Function Ends Here*/
-    
+  PrintVertices(p);
+  PrintFaces(p);
 
-    /* LeapFrog */
-    for (i=0;i<3;i++){
-      p->v[i]=p->v[i]+(0.5*dDelta*p->a[i]); //kick
-      pn->v[i]=pn->v[i]+(0.5*dDelta*pn->a[i]);
-    }
-
-    for (i=0;i<3;i++){
-  	  p->r[i]=p->r[i]+(dDelta*p->v[i]); //drift
-  	  pn->r[i]=pn->r[i]+(dDelta*pn->v[i]); //
-    }
-
-    //Overlap Test
-        bOverlap = bOverlapTest(p,pn);
-    if (bOverlap){
-      DoDEM(p, pn, dDelta, CnPreFac, CtPreFac);
-      printf("%d\n",bOverlap);
-    }
-    else{
-      vecZero(p->a); //Is this correct?
-      vecZero(pn->a);
-    }
-    
-    for (i=0;i<3;i++){
-      p->v[i]=p->v[i]+(0.5*dDelta*p->a[i]); //kick
-      pn->v[i]=pn->v[i]+(0.5*dDelta*pn->a[i]);
-    }
-    /* LeapFrog ENDS*/
-
-
-    t+=dDelta;
-    iStep++;
-  }
-  
   return 0;
 }
 

@@ -82,9 +82,7 @@ void    DoubleTriangle( void )
    }
 	
    /* Insure that v3 will be the first added. */
-   vertices = v3;
-
-	
+   vertices = v3;	
 }
 
   

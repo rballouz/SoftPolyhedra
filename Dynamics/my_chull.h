@@ -9,7 +9,7 @@ typedef struct tFaceStructure tsFace;
 typedef tsFace *tFace;
 
 struct tVertexStructure{
-    float     v[3];
+    double  v[3];
     int     vnum;
     tEdge   duplicate; /*pointer to incident cone edge (or NULL)*/
     bool    onhull; /*T iff point on hull*/
