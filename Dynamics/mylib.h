@@ -1,3 +1,6 @@
+tVertex PolyDualUnion(tVertex p_vd, tVertex pn_vd);
+tVertex PolyConstructDual(PARTICLE *p);
+void PolyMOIcompute(PARTICLE *p);
 void RotatePoly(PARTICLE *p, double dDelta);
 void SpringForce (PARTICLE *p, PARTICLE *pn);
 int bOverlapTest(PARTICLE *p, PARTICLE *pn);
@@ -5,6 +8,68 @@ void matPrint(Mat a); //print out a 3x3 matrix
 void FileInput(PARTICLE *p, PARTICLE *pn);
 void FileOutput(PARTICLE *p, PARTICLE *pn, char *achOutFile);
 
+/*
+void PolyConstructIntersection(PARTICLE *p, PARTICLE *pn)
+{
+  PARTICLE *p_d,*pn_d,*p_u;
+  p_d=malloc(sizeof(PARTICLE));
+  pn_d=malloc(sizeof(PARTICLE));
+  p_u=malloc(sizeof(PARTICLE)); //need to allocate memory to pointer
+
+  //Construct Duals of p and pn: p_d and pn_d
+  
+  //create union of p_d and pn_d: p_u
+  
+  //find convex hull of p_u (only a list of vertices)
+
+  //Construct Duals of of convex hull of p_u
+*/
+
+tVertex PolyDualUnion(tVertex p_vd, tVertex pn_vd)
+{
+  tVertex v_u;
+  v_u=p_vd; //link to head of first list
+  v_u->prev->next=pn_vd; //link end of first list to head of second list
+  v_u->prev->next->prev=v_u->prev; //link head of second to end of first
+  v_u->prev=pn_vd->prev; //link head of first to end of second
+  v_u->prev->next=v_u; //link end of second to head of first
+
+  return v_u;
+  }
+
+tVertex PolyConstructDual(PARTICLE *p) //Create vertex data structure for dual? in particle structure? or return vertex structure?
+{
+  tFace f;
+  tVertex vertices, v;
+  Vec v0,v1,v2,n,temp0,temp1;
+  int vnum;
+
+  vertices=NULL;
+  f=p->faces;
+  
+  do{
+    vecSet(v0, f->vertex[0]->v[X], f->vertex[0]->v[Y], f->vertex[0]->v[Z]);
+    vecSet(v1, f->vertex[1]->v[X], f->vertex[1]->v[Y], f->vertex[1]->v[Z]);
+    vecSet(v2, f->vertex[2]->v[X], f->vertex[2]->v[Y], f->vertex[2]->v[Z]);
+
+    //Solve Plane equation for normal vector of 3 non-collinear points
+    vecSub(v0,v1,temp0);
+    vecSub(v0,v2,temp1);
+    vecCross(temp0,temp1,n);
+    
+    //CreateVertexList
+    NEW(v, tsVertex);
+    ADD(vertices, v);
+    v->v[X]=n[X];
+    v->v[Y]=n[Y];
+    v->v[Z]=n[Z];
+    v->vnum = vnum++;
+    f=f->next;
+    } while (f != p->faces);
+  
+  return vertices;
+}
+  
 #define PolyMOIsubexp(w0, w1, w2, f1, f2, f3, g0, g1, g2)\
 {\
   double temp0, temp1, temp2;\
@@ -57,7 +122,7 @@ void PolyMOIcompute(PARTICLE *p)
     
     //Compute Integral Terms
     PolyMOIsubexp(x0, x1, x2, f1x, f2x, f3x, g0x, g1x, g2x);
-    PolyMOIsubexp(y0, x1, x2, f1y, f2y, f3y, g0y, g1y, g2y);
+    PolyMOIsubexp(y0, y1, y2, f1y, f2y, f3y, g0y, g1y, g2y);
     PolyMOIsubexp(z0, z1, z2, f1z, f2z, f3z, g0z, g1z, g2z);
     
     //Update Integrals
@@ -70,7 +135,7 @@ void PolyMOIcompute(PARTICLE *p)
     z_2  += d2*f3z;
     xy  += d0*(y0*g0x+y1*g1x+y2*g2x);
     yz  += d1*(z0*g0y+z1*g1y+z2*g2y);
-    zx  += d2*(x0*g0z+x1*g1z+yz*g2z);
+    zx  += d2*(x0*g0z+x1*g1z+x2*g2z);
     f=f->next;
     } while (f != p->faces);
     
