@@ -15,10 +15,11 @@ void CleanUp( tVertex *pvnext, PARTICLE *p );
 void CleanVertices( tVertex *pvnext, PARTICLE *p  );
 void CleanEdges( PARTICLE *p  );
 void CleanFaces( PARTICLE *p );
-void ReadVertices(PARTICLE *p);
+void ReadVertices(PARTICLE *p, char *achShapeFile);
 void PrintEdges(PARTICLE *p);
 void PrintFaces(PARTICLE *p);
 void PrintVertices(PARTICLE *p);
+void PrintVertList(tVertex vertices);
 
 /*Functions*/
 tVertex	MakeNullVertex( PARTICLE *p )
@@ -514,10 +515,10 @@ bool	Collinear( tVertex a, tVertex b, tVertex c )
 }
 
 /*Reads in x,y,z from command line*/
-void ReadVertices(PARTICLE *p)
+void ReadVertices(PARTICLE *p, char *achShapeFile)
 {
     FILE *fp;
-    fp=fopen("hull_3d.in","r");
+    fp=fopen(achShapeFile,"r");
     if (fp == NULL) {
         fprintf(stderr, "Can't open input file!\n");
         exit(1);
@@ -532,7 +533,7 @@ void ReadVertices(PARTICLE *p)
         v->v[X] = x;
         v->v[Y] = y;
         v->v[Z] = z;
-        vecScale(v->v,p->dRadius,v->v); /*Scale by Particle Radius*/
+        //vecScale(v->v,p->dRadius,v->v); /*Scale by Particle Radius*/
         v->vnum = vnum++;
     }
 }
@@ -593,5 +594,22 @@ void PrintVertices(PARTICLE *p)
     printf("%.2g  %.2g  %.2g\n",x0,y0,z0);
     v=v->next;
     } while(v != p->vertices);
+    printf("------\n");
+}
+
+void PrintVertList(tVertex vertices)
+{
+  double x0, y0, z0;
+  tVertex v;
+
+  v = vertices;
+  do{
+    x0=v->v[X];
+    y0=v->v[Y];
+    z0=v->v[Z];
+    
+    printf("%.2g  %.2g  %.2g\n",x0,y0,z0);
+    v=v->next;
+    } while(v != vertices);
     printf("------\n");
 }
