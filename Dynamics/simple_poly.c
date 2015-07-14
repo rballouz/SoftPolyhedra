@@ -23,7 +23,7 @@ int main(){
   int nSteps,iStep=0;
   int iOutFreq;
   int bOverlap=0;
-  char achOutFile[20];
+  char achOutFile[20], achShapeFile[20];
 
   //Need to initialize dKn for each particle
   /*TODO: move this to an initialization function to clean up*/
@@ -35,7 +35,7 @@ int main(){
   p->vertices=NULL;
   p->edges=NULL;
   p->faces=NULL;
-  
+  p->dDensity = 1.;
   
   pn->dKn = p->dKn;
   pn->dKt = p->dKt;
@@ -45,7 +45,7 @@ int main(){
   pn->vertices=NULL;
   pn->edges=NULL;
   pn->faces=NULL;
-  
+  pn->dDensity = 1.;
   dDelta=1.47e-10;
   nSteps = 40000;
   iOutFreq = nSteps / 50;
@@ -78,11 +78,27 @@ int main(){
 
   /*Construct Hull for each particle - Edges, Faces based on shape information (i.e. Vertex location about center of particle - store information in memory)*/
   /*Put these 3 / 4 calls into a single function that takes in the particle struct*/
-  ReadVertices(p);
+  ReadVertices(p, "hull_3d.in");
   DoubleTriangle(p);
   ConstructHull(p);
-  PrintFaces(p);
+  //ReadVertices(pn, "hull_3d_Neighbor.in");
+  //DoubleTriangle(pn);
+  //ConstructHull(pn);
+  //PrintFaces(p);
   PrintVertices(p);
+  //PolyMOIcompute(p);
+  //matPrint(p->mInertia);
+  
+  
+  tVertex p_vd, pn_vd;
+  p_vd=PolyConstructDual(p);
+  PrintVertList(p_vd);
+  
+  /*
+  pn_vd=PolyConstructDual(pn);  
+  PrintVertList(pn_vd);
+  */
+  
   //p->w[2]=0.5;
   //dDelta=0.5;
   //RotatePoly(p, dDelta);
