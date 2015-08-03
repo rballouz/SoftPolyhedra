@@ -23,6 +23,9 @@ typedef struct particle{
   tVertex vertices;
   tEdge edges;
   tFace faces;
+  
+  /*SAT structures*/
+  COUPLE cpl;
 } PARTICLE;
 
 

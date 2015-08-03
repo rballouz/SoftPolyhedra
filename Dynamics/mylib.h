@@ -1,7 +1,7 @@
 tVertex PolyDualUnion(tVertex p_vd, tVertex pn_vd);
 tVertex PolyConstructDual(PARTICLE *p);
 void PolyMOIcompute(PARTICLE *p);
-void RotatePoly(PARTICLE *p, double dDelta);
+void PolyRotate(PARTICLE *p, double dDelta);
 void SpringForce (PARTICLE *p, PARTICLE *pn);
 int bOverlapTest(PARTICLE *p, PARTICLE *pn);
 void matPrint(Mat a); //print out a 3x3 matrix
@@ -163,7 +163,7 @@ void PolyMOIcompute(PARTICLE *p)
   }
 
 /*Print vertex pairs of edges*/
-void RotatePoly(PARTICLE *p, double dDelta)
+void PolyRotate(PARTICLE *p, double dDelta)
 {
   Vec xAxis, yAxis, zAxis;
   xAxis[0]=1;

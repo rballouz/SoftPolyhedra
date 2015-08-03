@@ -95,7 +95,7 @@ int main(){
   PrintVertList(p_vd);
   
   /*
-  pn_vd=PolyConstructDual(pn);  
+  pn_vd=PolyConstructDual(pn);
   PrintVertList(pn_vd);
   */
   
