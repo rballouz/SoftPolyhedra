@@ -9,6 +9,7 @@
 #include"my_chull_func.h"
 #include"mylib.h"
 #include"smoothfcn_eq.h"
+#include"sat_convert.h"
 
 int main(){
 
@@ -79,20 +80,31 @@ int main(){
   /*Construct Hull for each particle - Edges, Faces based on shape information (i.e. Vertex location about center of particle - store information in memory)*/
   /*Put these 3 / 4 calls into a single function that takes in the particle struct*/
   ReadVertices(p, "hull_3d.in");
-  DoubleTriangle(p);
-  ConstructHull(p);
-  //ReadVertices(pn, "hull_3d_Neighbor.in");
+  //DoubleTriangle(p);
+  //ConstructHull(p);
+  ReadVertices(pn, "hull_3d_Neighbor.in");
   //DoubleTriangle(pn);
   //ConstructHull(pn);
+  
+  COUPLE cpl;
+  cpl = (COUPLE)malloc(sizeof(struct couple));
+  cpl->p = p;
+  cpl->pn = pn;
+  cpl->n = 0;
+  cpl->plane_exists = FALSE;
+  
+  int bCollision;
+  bCollision = PolyCollisionTest(cpl);
+  printf("Value of bCollision: %d\n", bCollision);
   //PrintFaces(p);
-  PrintVertices(p);
+  //PrintVertices(p);
   //PolyMOIcompute(p);
   //matPrint(p->mInertia);
   
   
-  tVertex p_vd, pn_vd;
-  p_vd=PolyConstructDual(p);
-  PrintVertList(p_vd);
+  //tVertex p_vd, pn_vd;
+  //p_vd=PolyConstructDual(p);
+  //PrintVertList(p_vd);
   
   /*
   pn_vd=PolyConstructDual(pn);

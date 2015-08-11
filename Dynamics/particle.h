@@ -23,12 +23,22 @@ typedef struct particle{
   tVertex vertices;
   tEdge edges;
   tFace faces;
-  
-  /*SAT structures*/
-  COUPLE cpl;
+  int iNumVertices;
+  //struct couple *cpl; //Don't know if this is necessary _DEBUG_ -RB
 } PARTICLE;
 
 
+  /*SAT structures*/
+typedef struct couple {
+  /*This is a structure of particle p, so really only need to carry neighbor?*/
+  PARTICLE *p;	/* First polyhedron of collision test. */
+  PARTICLE *pn;	/* Second polyhedron of collision test. */
+  bool plane_exists;	/* prospective separating plane flag */
+  double pln_pnt1[3];	/* 1st point used to form separating plane. */
+  double pln_pnt2[3];	/* 2nd point used to form separating plane. */
+  int vert_indx[4][2]; /* cached points for distance algorithm. */
+  int n;		/* number of cached points, if any. */
+  } *COUPLE;
 
 
 

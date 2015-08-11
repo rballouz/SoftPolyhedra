@@ -536,6 +536,7 @@ void ReadVertices(PARTICLE *p, char *achShapeFile)
         //vecScale(v->v,p->dRadius,v->v); /*Scale by Particle Radius*/
         v->vnum = vnum++;
     }
+    p->iNumVertices = vnum;
 }
 
 /*Print vertex pairs of edges*/

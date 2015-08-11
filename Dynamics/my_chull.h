@@ -14,6 +14,7 @@ struct tVertexStructure{
     tEdge   duplicate; /*pointer to incident cone edge (or NULL)*/
     bool    onhull; /*T iff point on hull*/
     bool    mark; /*T iff point already processed*/
+    int     m; /*total number of vertices*/
     tVertex next, prev;
 };
 
@@ -37,6 +38,7 @@ bool Xor( bool x, bool y)
 {
     return !x ^ !y;
 }
+
 
 /*Global Head Pointers
 tVertex vertices    =   NULL;
